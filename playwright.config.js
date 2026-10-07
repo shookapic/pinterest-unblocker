@@ -5,4 +5,5 @@ export default defineConfig({
   timeout: 20000,
   workers: 1,
   reporter: "list",
+  use: { trace: "retain-on-failure", screenshot: "only-on-failure" },
 });

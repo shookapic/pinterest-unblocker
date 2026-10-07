@@ -48,6 +48,7 @@ for (const browser of ["chrome", "firefox"]) {
       strict_min_version: "140.0",
       data_collection_permissions: { required: ["none"] },
     },
+    gecko_android: { strict_min_version: "142.0" },
   };
   await writeFile(path.join(target, "manifest.json"), `${JSON.stringify(result, null, 2)}\n`);
   await writeFile(path.join(root, "artifacts", `pinterest-unblocker-${browser}-${version}.zip`), zipSync(await archive(target), { level: 9 }));

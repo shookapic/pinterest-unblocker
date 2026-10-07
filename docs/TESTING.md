@@ -28,4 +28,4 @@ Use a logged-out browser profile. Load the built extension using the README inst
 - Disable the extension and reload. Confirm normal site behavior returns.
 - Check browser developer tools for extension errors and unexpected network activity.
 
-Record browser versions, exact URLs, dates, and any unsupported layout before submitting a release. Do not infer full domain coverage from a successful test on one domain.
+Record browser versions, exact URLs, dates, and any unsupported layout when reporting results. Do not infer full domain coverage from a successful test on one domain.

@@ -12,4 +12,4 @@ Image saving is performed by the browser's native **Save image as…** command. 
 
 To stop page changes, disable or remove the extension and reload affected tabs.
 
-Privacy questions can be raised through the project's repository issue tracker.
+Privacy questions can be raised through the [repository issue tracker](https://github.com/shookapic/pinterest-unblocker/issues).

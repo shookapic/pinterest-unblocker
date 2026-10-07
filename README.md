@@ -1,15 +1,59 @@
-# Pinterest Unblocker
+<p align="center">
+  <img src="extension/icons/128.png" alt="Pinterest Unblocker" width="80" height="80">
+</p>
 
-A small, privacy-focused browser extension that clears login overlays from Pinterest and restores native image browsing.
+<h1 align="center">Pinterest Unblocker</h1>
 
-- Hides supported login and signup overlays on browsing pages.
-- Restores the browser's image context menu and **Save image as…**.
-- Removes scroll locks associated with those overlays.
-- Handles dynamically inserted overlays and single-page navigation.
-- Supports 27 explicitly listed international Pinterest domains and their subdomains.
-- Keeps dedicated login, registration, settings, and password pages usable.
+<p align="center">Unobstructed browsing. Native image saving.</p>
 
-No analytics, accounts, remote code, background service, or extension API permissions. Site access is limited to the Pinterest domains in [config/domains.json](config/domains.json). Help, policy, developer, business, and advertising subdomains are excluded.
+<p align="center">
+  <a href="https://github.com/shookapic/pinterest-unblocker/actions/workflows/check.yml"><img src="https://github.com/shookapic/pinterest-unblocker/actions/workflows/check.yml/badge.svg?branch=main" alt="CI"></a>
+  <a href="https://github.com/shookapic/pinterest-unblocker/releases/latest"><img src="https://img.shields.io/github/v/release/shookapic/pinterest-unblocker?color=173b32" alt="Latest release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-173b32" alt="MIT license"></a>
+</p>
+
+Pinterest Unblocker is a lightweight Chrome and Firefox extension that removes supported login overlays, restores scrolling, and brings back the browser's image context menu. It runs entirely on your device, with no accounts, analytics, or remote code.
+
+## Features
+
+| Feature | What it does |
+| --- | --- |
+| Login overlay removal | Hides supported login and signup prompts on browsing pages. |
+| Image saving | Enables **Save image as…** through the browser's native menu. |
+| Native right-click | Stops Pinterest's image context-menu interception. |
+| Unrestricted scrolling | Restores scrolling locked by supported login overlays. |
+| Dynamic navigation | Handles newly inserted overlays and single-page navigation. |
+| International domains | Covers 27 listed Pinterest domains and their subdomains. |
+
+Dedicated account pages and unrelated dialogs remain available. The domain allowlist is maintained in [config/domains.json](config/domains.json).
+
+## Installation
+
+Download the browser-specific ZIP from the [latest release](https://github.com/shookapic/pinterest-unblocker/releases/latest) and extract it.
+
+**Chrome 109+**
+
+1. Open `chrome://extensions` and enable **Developer mode**.
+2. Select **Load unpacked** and choose the extracted Chrome folder containing `manifest.json`.
+3. Reload open Pinterest tabs.
+
+**Firefox 140+ — developer preview**
+
+1. Open `about:debugging#/runtime/this-firefox`.
+2. Select **Load Temporary Add-on** and choose the extracted Firefox `manifest.json`.
+3. Reload open Pinterest tabs.
+
+Firefox's temporary installation lasts until the browser restarts. The GitHub ZIP is not a signed Firefox add-on. Marketplace installations are not currently available.
+
+## Usage
+
+Browse Pinterest as usual. Right-click a visible image and select **Save image as…** to save the version delivered by the site. Disable the extension in the browser's extension manager and reload the page to restore normal site behavior.
+
+## Privacy
+
+No data collection, tracking, extension storage, or background service. Content scripts run only on listed Pinterest domains; help, developer, policy, business, and advertising subdomains are excluded. Image downloads use the browser's built-in command.
+
+Read the [privacy policy](PRIVACY.md).
 
 ## Development
 
@@ -21,41 +65,25 @@ npm run build
 npm test
 ```
 
-The build creates `dist/chrome`, `dist/firefox`, and versioned upload ZIPs in `artifacts/`. ZIPs contain only the extension files and a browser-specific Manifest V3 manifest. Dependencies are development tools; none are bundled into the extension.
+Browser-specific builds are written to `dist/`; packaged ZIPs are written to `artifacts/`. Runtime code has no bundled dependencies.
 
-## Install locally
-
-**Chrome:** Open `chrome://extensions`, enable Developer mode, choose **Load unpacked**, and select `dist/chrome`.
-
-**Firefox:** Open `about:debugging#/runtime/this-firefox`, choose **Load Temporary Add-on**, and select `dist/firefox/manifest.json`. Temporary installations last until Firefox restarts. Firefox 140 or later is required.
-
-Reload any Pinterest tabs that were already open before installation. To pause the extension, disable it in your browser's extension manager and reload the page.
-
-## Save images
-
-Right-click a visible image and choose **Save image as…** in the browser menu. This saves the image supplied by Pinterest at its displayed resolution. The extension does not fetch original-resolution files or provide bulk downloads.
-
-## Verification
-
-`npm test` covers overlay detection, scroll and accessibility restoration, protected account routes, unrelated dialogs, dynamic navigation, native context-menu events, domain scope, and upload archive contents. Build before running the tests.
-
-```sh
-npm run test:browser
-npm run lint:firefox
+```text
+extension/       Content scripts, popup, and icons
+config/          Pinterest domain allowlist
+scripts/         Build and icon-generation tools
+tests/           DOM, package, and browser integration tests
+docs/            Testing documentation
+.github/         CI, release automation, and issue templates
 ```
 
-Browser checks use locally generated test pages on routed Pinterest URLs, including an actual unpacked extension in Chromium. They do not establish compatibility with every current Pinterest layout. See [the manual acceptance checklist](docs/TESTING.md) for live-site testing before submission.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development checks and [testing documentation](docs/TESTING.md) for coverage. CI validates packages, runs the unit suite, checks the Firefox manifest, and tests the installed extension in Chromium before releasing a new version.
 
-## Store submission
+## Support
 
-[Publishing instructions](docs/PUBLISHING.md), [listing copy](docs/STORE-LISTING.md), and a [privacy policy](PRIVACY.md) are included. Store review and signing are required before distribution through either marketplace.
+[Report a bug](https://github.com/shookapic/pinterest-unblocker/issues/new?template=bug_report.yml) with the browser version, Pinterest URL, and reproduction steps. Pinterest layout changes can affect overlay detection.
 
-## Limitations
-
-Pinterest changes its page structure regularly. Unsupported overlays may need new selectors. The extension changes locally rendered pages; it does not grant access to private boards, bypass server-side authentication, or load content that Pinterest has not delivered. Saving an image does not grant rights to reuse it.
-
-This project is independent of Pinterest and is not endorsed by or affiliated with Pinterest. The icon is original project artwork.
+The extension works with content already delivered to the browser. It does not unlock private boards, bypass server-side authentication, or fetch original-resolution images. Saving an image does not grant rights to reuse it.
 
 ## License
 
-[MIT](LICENSE).
+[MIT](LICENSE). Independent project; not affiliated with or endorsed by Pinterest.

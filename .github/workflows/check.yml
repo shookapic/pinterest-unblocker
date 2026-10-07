@@ -1,25 +1,79 @@
-name: Check
+name: CI
 on:
   push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   extension:
+    name: Validate extension
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - run: npm run build
-      - run: npm test
-      - run: npm run lint:firefox
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:browser
-      - uses: actions/upload-artifact@v4
+      - name: Install dependencies
+        run: npm ci
+      - name: Build Chrome and Firefox packages
+        run: npm run build
+      - name: Run unit and package tests
+        run: npm test
+      - name: Validate Firefox extension
+        run: npm run lint:firefox
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Test installed extension
+        run: npm run test:browser
+      - name: Upload validated packages
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: store-packages
           path: artifacts/*.zip
+          if-no-files-found: error
+      - name: Upload browser failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: browser-diagnostics
+          path: test-results/
+          if-no-files-found: ignore
+  release:
+    name: Publish release
+    needs: extension
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+      - name: Download validated packages
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: store-packages
+          path: artifacts/
+      - name: Publish a new version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          tag="v$version"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists."
+          else
+            gh release create "$tag" artifacts/*.zip \
+              --target "$GITHUB_SHA" \
+              --title "Pinterest Unblocker $tag" \
+              --notes-file .github/RELEASE_NOTES.md
