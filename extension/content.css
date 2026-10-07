@@ -4,8 +4,23 @@
 }
 
 [data-pu-scroll] {
-  overflow-y: auto !important;
+  overflow-x: visible !important;
+  overflow-y: visible !important;
   overscroll-behavior-y: auto !important;
+}
+
+html[data-pu-scroll], [data-pu-scroll="container"] {
+  overflow-y: auto !important;
+}
+
+#desktopWrapper[data-pu-flow] {
+  position: static !important;
+  height: auto !important;
+  max-height: none !important;
+}
+
+[data-pu-interactive] {
+  pointer-events: auto !important;
 }
 
 html[data-pu-scroll], body[data-pu-scroll] {
@@ -16,7 +31,8 @@ html[data-pu-scroll], body[data-pu-scroll] {
 
 /* Decorative covers must not become the right-click target. */
 [data-test-id="pin-hover-overlay"],
-[data-test-id="pin-image-overlay"] {
+[data-test-id="pin-image-overlay"],
+.GrowthUnauthPinImage__imageDim {
   pointer-events: none !important;
 }
 

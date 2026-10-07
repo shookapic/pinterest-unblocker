@@ -34,7 +34,7 @@ test("hides known auth wall, restores scrolling and accessibility", async (t) =>
   w.document.body.style.overflow = "hidden";
   await flush(w);
   assert.equal(w.getComputedStyle(w.document.querySelector('[data-test-id="signup-wall"]')).display, "none");
-  assert.equal(w.getComputedStyle(w.document.body).overflowY, "auto");
+  assert.equal(w.getComputedStyle(w.document.body).overflowY, "visible");
   assert.equal(w.document.getElementById("__PWS_ROOT__").hasAttribute("inert"), false);
   assert.equal(w.document.getElementById("__PWS_ROOT__").hasAttribute("aria-hidden"), false);
 });
@@ -76,7 +76,7 @@ test("handles new overlays and replaced roots following SPA navigation", async (
   assert.equal(w.document.getElementById("__PWS_ROOT__").hasAttribute("inert"), false);
   w.document.body.style.overflow = "hidden";
   await flush(w);
-  assert.equal(w.getComputedStyle(w.document.body).overflowY, "auto");
+  assert.equal(w.getComputedStyle(w.document.body).overflowY, "visible");
 });
 
 test("a URL-only navigation restores the deliberate login page", async (t) => {
@@ -158,4 +158,17 @@ test("restores the backdrop and nested inert state on intentional login navigati
   await flush(w);
   assert.equal(w.document.getElementById("backdrop").hasAttribute("data-pu-hidden"), false);
   assert.equal(w.document.getElementById("content").hasAttribute("inert"), true);
+});
+
+test("does not turn an unlocked application root into an independent scroller", async (t) => {
+  const w = fixture(t, '<div id="__PWS_ROOT__" style="height:100vh"><div id="feed" style="height:100vh;overflow-y:visible"><main style="height:3000px">Pins</main></div></div><div data-test-id="signup-wall"></div>');
+  await flush(w);
+  assert.equal(w.getComputedStyle(w.document.getElementById("feed")).overflowY, "visible");
+  assert.equal(w.document.getElementById("__PWS_ROOT__").hasAttribute("data-pu-scroll"), false);
+});
+
+test("preserves an existing feed scroller while releasing an auth lock", async (t) => {
+  const w = fixture(t, '<div id="__PWS_ROOT__"><div id="feed" style="height:100vh;overflow-y:scroll"><main>Pins</main></div></div><div data-test-id="signup-wall"></div>');
+  await flush(w);
+  assert.equal(w.getComputedStyle(w.document.getElementById("feed")).overflowY, "scroll");
 });

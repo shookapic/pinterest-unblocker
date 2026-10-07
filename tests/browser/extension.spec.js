@@ -108,3 +108,95 @@ test("unrelated sites and excluded Pinterest subdomains remain unchanged", async
     await page.close();
   }
 });
+
+test("window scrolling still reaches the feed's load-more listener", async () => {
+  const page = await context.newPage();
+  await page.route("https://www.pinterest.com/ideas/scroll-test/", (route) => route.fulfill({
+    contentType: "text/html",
+    body: `<!doctype html><html><head><style>
+      body { margin:0; overflow:hidden; }
+      #__PWS_ROOT__, #feed { height:100vh; }
+      main { height:2400px; }
+    </style></head><body><div id="__PWS_ROOT__"><div id="feed"><main><a href="/pin/123/">Pin</a></main></div></div>
+      <div data-test-id="signup-wall">Sign up</div>
+      <script>window.loadedPins=1;window.addEventListener('scroll',()=>{
+        if(window.scrollY>200 && window.loadedPins===1){
+          window.loadedPins++;document.querySelector('main').insertAdjacentHTML('beforeend','<p id="next-pin">Next pin</p>');
+        }
+      });</script></body></html>`,
+  }));
+  await page.goto("https://www.pinterest.com/ideas/scroll-test/");
+  await expect(page.locator('[data-test-id="signup-wall"]')).toBeHidden();
+  await page.mouse.move(300, 300);
+  await page.mouse.wheel(0, 700);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(200);
+  await expect(page.locator("#next-pin")).toHaveCount(1);
+  expect(await page.locator("#feed").evaluate((feed) => feed.scrollTop)).toBe(0);
+  await page.close();
+});
+
+test("retains a native nested feed scroller and its load-more listener", async () => {
+  const page = await context.newPage();
+  await page.route("https://www.pinterest.com/ideas/nested-scroll-test/", (route) => route.fulfill({
+    contentType: "text/html",
+    body: `<!doctype html><html><head><style>
+      body { margin:0;overflow:hidden; }
+      #feed { height:100vh;overflow-y:scroll; }
+      main { height:2400px; }
+    </style></head><body><div id="__PWS_ROOT__"><div id="feed"><main>Pins</main></div></div>
+      <div data-test-id="signup-wall">Sign up</div>
+      <script>document.getElementById('feed').addEventListener('scroll',event=>{
+        if(event.currentTarget.scrollTop>200)window.feedLoaded=true;
+      });</script></body></html>`,
+  }));
+  await page.goto("https://www.pinterest.com/ideas/nested-scroll-test/");
+  await expect(page.locator('[data-test-id="signup-wall"]')).toBeHidden();
+  await page.mouse.move(300, 300);
+  await page.mouse.wheel(0, 700);
+  await expect.poll(() => page.evaluate(() => window.feedLoaded)).toBe(true);
+  expect(await page.locator("#feed").evaluate((feed) => getComputedStyle(feed).overflowY)).toBe("scroll");
+  await page.close();
+});
+
+test("public pin images navigate despite a signup click handler and preserve controls", async () => {
+  const page = await context.newPage();
+  await page.goto("https://www.pinterest.com/");
+  await expect(page.locator('[data-test-id="signup-wall"]')).toBeHidden();
+  await page.evaluate(() => {
+    document.querySelector("main").innerHTML = '<div data-test-id="pin" style="position:relative"><a id="pin-link" href="/pin/456/"><img id="pin-image" width="128" height="128" src="/sample.png"><div class="GrowthUnauthPinImage__imageDim" style="position:absolute;inset:0"></div></a><button id="save-pin">Save</button></div>';
+    document.addEventListener("click", (event) => {
+      if (event.target.closest("#pin-link")) {
+        event.preventDefault();
+        document.body.insertAdjacentHTML("beforeend", '<div data-test-id="signup-wall">Log in</div>');
+      }
+      if (event.target.closest("#save-pin")) window.saveClicked = true;
+    });
+  });
+  await page.locator("#save-pin").click();
+  expect(await page.evaluate(() => window.saveClicked)).toBe(true);
+  await page.locator("#pin-image").click();
+  await expect(page).toHaveURL("https://www.pinterest.com/pin/456/");
+  await page.close();
+});
+
+test("releases a fixed desktop wrapper and root pointer lock", async () => {
+  const page = await context.newPage();
+  await page.route("https://www.pinterest.com/ideas/wrapper-test/", (route) => route.fulfill({
+    contentType: "text/html",
+    body: `<!doctype html><html><head><style>
+      body { margin:0;overflow:hidden;pointer-events:none; }
+      #desktopWrapper { position:fixed;inset:0;overflow:hidden; }
+      main { height:2400px;padding:40px; }
+    </style></head><body><div id="__PWS_ROOT__"><div id="desktopWrapper"><main><button id="open">Open</button></main></div></div>
+      <div data-test-id="signup-wall">Sign up</div>
+      <script>document.getElementById('open').onclick=()=>window.openClicked=true;</script></body></html>`,
+  }));
+  await page.goto("https://www.pinterest.com/ideas/wrapper-test/");
+  await expect(page.locator('[data-test-id="signup-wall"]')).toBeHidden();
+  await page.locator("#open").click();
+  expect(await page.evaluate(() => window.openClicked)).toBe(true);
+  await page.mouse.move(300, 300);
+  await page.mouse.wheel(0, 700);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(200);
+  await page.close();
+});

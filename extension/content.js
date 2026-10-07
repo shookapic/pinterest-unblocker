@@ -15,7 +15,7 @@
     '[data-test-id="giftWrap"]',
   ].join(",");
   const authLinkSelector = 'a[href*="/login"], a[href*="/signup"], a[href*="/register"]';
-  const rootSelector = 'html, body, #__PWS_ROOT__, #__PWS_ROOT__ > div';
+  const rootSelector = 'html, body, #__PWS_ROOT__, #__PWS_ROOT__ > div, #desktopWrapper, .reactCloseupScrollContainer';
   const modalSelector = '[role="dialog"], [aria-modal="true"]';
   const backdropSelector = '[data-test-id="modal"], [data-test-id="modal-overlay"], [data-test-id="mobile-modal-mask-overlay"], .ReactModal__Overlay, .FullPageModal__scroller';
   let queued = false;
@@ -30,6 +30,19 @@
       node instanceof Element && (node.matches("img, picture") || node.closest('[data-test-id="pin"]')),
     );
     if (image) event.stopImmediatePropagation();
+  }, true);
+
+  // After dismissing a wall, public pin links can use native navigation.
+  window.addEventListener("click", (event) => {
+    if (!unlocked || isAccountPage() || event.button !== 0) return;
+    const target = event.target;
+    if (!(target instanceof Element) || target.closest('button, input, select, textarea, [role="button"], [contenteditable="true"]')) return;
+    const link = target.closest('a[href]');
+    if (!link || !link.querySelector("img")) return;
+    const url = new URL(link.href, location.href);
+    if (url.origin === location.origin && /^\/pin\/\d+(?:\/|$)/.test(url.pathname)) {
+      event.stopImmediatePropagation();
+    }
   }, true);
 
   function isAccountPage() {
@@ -72,7 +85,15 @@
           ariaHidden: root.getAttribute("aria-hidden"),
         });
       }
-      if (root.matches(rootSelector)) root.setAttribute("data-pu-scroll", "");
+      if (root.matches(rootSelector)) {
+        const style = getComputedStyle(root);
+        const scrollLocked = /^(hidden|clip)$/.test(style.overflowY || style.overflow);
+        if (root.matches("html, body") || scrollLocked) {
+          root.setAttribute("data-pu-scroll", root.matches(".reactCloseupScrollContainer") ? "container" : "");
+        }
+        if (root.id === "desktopWrapper" && style.position === "fixed") root.setAttribute("data-pu-flow", "");
+        if (style.pointerEvents === "none") root.setAttribute("data-pu-interactive", "");
+      }
       root.removeAttribute("inert");
       if (root.getAttribute("aria-hidden") === "true") root.removeAttribute("aria-hidden");
     }
@@ -118,6 +139,8 @@
   function restoreScroll() {
     for (const [root, original] of restoredRoots) {
       root.removeAttribute("data-pu-scroll");
+      root.removeAttribute("data-pu-flow");
+      root.removeAttribute("data-pu-interactive");
       if (original.inert) root.setAttribute("inert", "");
       if (original.ariaHidden !== null) root.setAttribute("aria-hidden", original.ariaHidden);
     }
