@@ -1,0 +1,14 @@
+:root { color-scheme: light; font-family: system-ui, sans-serif; color: #173b32; background: #f8f6ef; }
+* { box-sizing: border-box; }
+body { width: 328px; margin: 0; }
+header { display: flex; align-items: center; gap: 12px; padding: 22px 24px 0; font-size: 12px; font-weight: 750; letter-spacing: 2px; }
+main { padding: 24px; }
+.eyebrow { color: #67786e; font-size: 10px; letter-spacing: 2px; font-weight: 700; margin: 0 0 10px; }
+h1 { font-size: 29px; line-height: 1.15; letter-spacing: -1px; margin: 0 0 14px; }
+.intro, .hint { color: #627068; font-size: 12px; line-height: 1.6; }
+ul { list-style: none; padding: 8px 0; font-size: 12px; line-height: 2.3; }
+li::before { content: "✓"; color: #39805e; font-weight: 800; margin-right: 12px; }
+.note { background: #e6ede3; border-radius: 12px; padding: 16px; font-size: 12px; }
+.note p { margin: 6px 0 0; line-height: 1.5; }
+.hint { font-size: 10px; margin-bottom: 0; }
+footer { display: flex; justify-content: space-between; border-top: 1px solid #e2e4d9; padding: 14px 24px; font-size: 10px; color: #67786e; }

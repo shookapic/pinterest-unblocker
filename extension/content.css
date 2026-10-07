@@ -1,0 +1,27 @@
+[data-pu-hidden] {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+[data-pu-scroll] {
+  overflow-y: auto !important;
+  overscroll-behavior-y: auto !important;
+}
+
+html[data-pu-scroll], body[data-pu-scroll] {
+  position: static !important;
+  height: auto !important;
+  max-height: none !important;
+}
+
+/* Decorative covers must not become the right-click target. */
+[data-test-id="pin-hover-overlay"],
+[data-test-id="pin-image-overlay"] {
+  pointer-events: none !important;
+}
+
+[data-test-id="pin"] img {
+  -webkit-user-drag: auto !important;
+  user-select: auto !important;
+  pointer-events: auto !important;
+}

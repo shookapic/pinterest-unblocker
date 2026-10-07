@@ -1,0 +1,11 @@
+node_modules/
+.npm-cache/
+.browser-cache/
+.local-tools/
+dist/
+artifacts/
+test-results/
+playwright-report/
+*.xpi
+*.zip
+.DS_Store
