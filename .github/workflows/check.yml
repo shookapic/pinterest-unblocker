@@ -77,3 +77,4 @@ jobs:
               --target "$GITHUB_SHA" \
               --title "Pinterest Unblocker $tag" \
               --notes-file .github/RELEASE_NOTES.md
+          fi

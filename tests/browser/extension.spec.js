@@ -43,20 +43,7 @@ test("installed extension hides overlays, scrolls, and preserves image right-cli
   // Check page scrolling before opening the browser's native menu.
   await page.mouse.move(300, 300);
   await page.mouse.wheel(0, 700);
-  await expect.poll(async () => {
-    const metrics = await page.evaluate(() => ({
-      top: window.scrollY,
-      height: document.scrollingElement.scrollHeight,
-      viewport: document.scrollingElement.clientHeight,
-      bodyTop: document.body.scrollTop,
-      bodyHeight: document.body.scrollHeight,
-      bodyViewport: document.body.clientHeight,
-      htmlOverflow: getComputedStyle(document.documentElement).overflowY,
-      bodyOverflow: getComputedStyle(document.body).overflowY,
-    }));
-    if (metrics.top === 0) console.log("Scroll metrics:", metrics);
-    return metrics.top;
-  }).toBeGreaterThan(0);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
   await page.evaluate(() => window.scrollTo(0, 0));
   const imageDefault = await page.locator("#image").evaluate((image) =>
     image.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true })),
