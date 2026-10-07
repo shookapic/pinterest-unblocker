@@ -125,3 +125,37 @@ test("an ordinary pin does not receive scroll overrides", async (t) => {
   await flush(w);
   assert.equal(w.document.querySelectorAll('[data-pu-scroll], [data-pu-hidden]').length, 0);
 });
+
+test("hides the enclosing auth backdrop as well as the login dialog", async (t) => {
+  const w = fixture(t, '<main id="__PWS_ROOT__"><button>Open pin</button></main><div id="backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,.6)"><section role="dialog"><a href="/login/">Log in</a></section></div>');
+  await flush(w);
+  assert.equal(w.getComputedStyle(w.document.getElementById("backdrop")).display, "none");
+  assert.equal(w.document.getElementById("__PWS_ROOT__").hasAttribute("data-pu-hidden"), false);
+});
+
+test("recognizes the full-page signup wall and releases nested inert content", async (t) => {
+  const w = fixture(t, '<main id="__PWS_ROOT__"><div><section id="content" inert><button>Open pin</button></section></div></main><div data-test-id="fullPageSignupModal">Sign up</div>');
+  await flush(w);
+  assert.equal(w.getComputedStyle(w.document.querySelector('[data-test-id="fullPageSignupModal"]')).display, "none");
+  assert.equal(w.document.getElementById("content").hasAttribute("inert"), false);
+});
+
+test("does not hide a viewport application wrapper or a separate share backdrop", async (t) => {
+  const w = fixture(t, '<div id="app" style="position:fixed;inset:0"><main><button>Pin</button></main><div role="dialog" id="auth"><a href="/login/">Log in</a></div><div id="share-backdrop" style="position:fixed;inset:0"><section role="dialog">Share pin</section></div></div>');
+  await flush(w);
+  assert.equal(w.document.getElementById("auth").hasAttribute("data-pu-hidden"), true);
+  assert.equal(w.document.getElementById("app").hasAttribute("data-pu-hidden"), false);
+  assert.equal(w.document.getElementById("share-backdrop").hasAttribute("data-pu-hidden"), false);
+});
+
+test("restores the backdrop and nested inert state on intentional login navigation", async (t) => {
+  const w = fixture(t, '<main id="__PWS_ROOT__"><section id="content" inert><button>Pin</button></section></main><div id="backdrop" class="ReactModal__Overlay"><div><section data-test-id="fullPageSignupModal">Sign up</section></div></div>');
+  await flush(w);
+  assert.equal(w.document.getElementById("backdrop").hasAttribute("data-pu-hidden"), true);
+  assert.equal(w.document.getElementById("content").hasAttribute("inert"), false);
+  w.history.pushState({}, "", "/login/");
+  w.dispatchEvent(new w.PopStateEvent("popstate"));
+  await flush(w);
+  assert.equal(w.document.getElementById("backdrop").hasAttribute("data-pu-hidden"), false);
+  assert.equal(w.document.getElementById("content").hasAttribute("inert"), true);
+});

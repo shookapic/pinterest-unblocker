@@ -74,6 +74,31 @@ test("SPA updates hide late dialogs and preserve intentional login", async () =>
   await page.close();
 });
 
+test("removes gray auth backdrops and makes nested inert content clickable", async () => {
+  const page = await context.newPage();
+  await page.goto("https://www.pinterest.com/");
+  await expect(page.locator('[data-test-id="signup-wall"]')).toBeHidden();
+  await page.evaluate(() => {
+    document.querySelector('[data-test-id="signup-wall"]').remove();
+    document.querySelector("main").innerHTML = '<div><section inert id="content"><button id="open-pin">Open pin</button></section></div>';
+    window.pinClicks = 0;
+    document.getElementById("open-pin").onclick = () => window.pinClicks++;
+    document.body.insertAdjacentHTML("beforeend", '<div id="gray-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10001"><div><section role="dialog" aria-modal="true"><div data-test-id="fullPageSignupModal">Sign up</div><a href="/login/">Log in</a></section></div></div>');
+  });
+  await expect(page.locator("#gray-backdrop")).toBeHidden();
+  await expect(page.locator("#content")).not.toHaveAttribute("inert");
+  await page.locator("#open-pin").click();
+  expect(await page.evaluate(() => window.pinClicks)).toBe(1);
+  await page.evaluate(() => {
+    document.body.insertAdjacentHTML("beforeend", '<div id="share-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10002"><section role="dialog"><button id="share-pin">Share pin</button></section></div>');
+    document.getElementById("share-pin").onclick = () => window.pinClicks++;
+  });
+  await expect(page.locator("#share-backdrop")).toBeVisible();
+  await page.locator("#share-pin").click();
+  expect(await page.evaluate(() => window.pinClicks)).toBe(2);
+  await page.close();
+});
+
 test("unrelated sites and excluded Pinterest subdomains remain unchanged", async () => {
   for (const host of ["example.org", "help.pinterest.com"]) {
     const page = await context.newPage();

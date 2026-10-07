@@ -8,9 +8,16 @@
     '[data-test-id="unauth-banner"]',
     '[data-test-id="signup-modal"]',
     '[data-test-id="login-modal"]',
+    '[data-test-id="login-modal-default"]',
+    '[data-test-id="fullPageSignupModal"]',
+    '[data-test-id="signup-modal-inspired"]',
+    '[data-test-id="mobile-signup-mask"]',
+    '[data-test-id="giftWrap"]',
   ].join(",");
   const authLinkSelector = 'a[href*="/login"], a[href*="/signup"], a[href*="/register"]';
   const rootSelector = 'html, body, #__PWS_ROOT__, #__PWS_ROOT__ > div';
+  const modalSelector = '[role="dialog"], [aria-modal="true"]';
+  const backdropSelector = '[data-test-id="modal"], [data-test-id="modal-overlay"], [data-test-id="mobile-modal-mask-overlay"], .ReactModal__Overlay, .FullPageModal__scroller';
   let queued = false;
   let unlocked = false;
   const hidden = new Set();
@@ -36,15 +43,36 @@
     }
   }
 
+  function authLayer(element) {
+    let layer = element;
+    for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+      if (parent.matches('html, body, #__PWS_ROOT__, #__next, #root')) break;
+      // Never hide the application or a separate, unrelated modal with the wall.
+      const pageContent = 'main, [role="main"], [role="grid"], [data-test-id="pin"], header, nav';
+      if (parent.matches(pageContent) || [...parent.querySelectorAll(pageContent)]
+        .some((node) => !element.contains(node))) break;
+      if ([...parent.querySelectorAll(modalSelector)]
+        .some((node) => node !== element && !element.contains(node) && !node.contains(element))) break;
+      const style = getComputedStyle(parent);
+      const rect = parent.getBoundingClientRect();
+      const coversViewport = style.position === "fixed" &&
+        ((style.inset === "0" || style.inset === "0px") ||
+          (rect.width >= innerWidth && rect.height >= innerHeight && rect.top <= 0 && rect.left <= 0));
+      if (parent.matches(backdropSelector) || coversViewport) layer = parent;
+    }
+    return layer;
+  }
+
   function unlockScrolling() {
-    for (const root of document.querySelectorAll(rootSelector)) {
+    for (const root of document.querySelectorAll(`${rootSelector}, [inert]`)) {
+      if (root.closest('[data-pu-hidden]')) continue;
       if (!restoredRoots.has(root)) {
         restoredRoots.set(root, {
           inert: root.hasAttribute("inert"),
           ariaHidden: root.getAttribute("aria-hidden"),
         });
       }
-      root.setAttribute("data-pu-scroll", "");
+      if (root.matches(rootSelector)) root.setAttribute("data-pu-scroll", "");
       root.removeAttribute("inert");
       if (root.getAttribute("aria-hidden") === "true") root.removeAttribute("aria-hidden");
     }
@@ -66,12 +94,12 @@
 
     // Keep unrelated dialogs (pin details, reporting, sharing) usable.
     const overlays = new Set(document.querySelectorAll(overlaySelector));
-    for (const dialog of document.querySelectorAll('[role="dialog"], [aria-modal="true"]')) {
+    for (const dialog of document.querySelectorAll(modalSelector)) {
       if (dialog.querySelector(`${overlaySelector}, ${authLinkSelector}, input[type="password"]`)) {
-        overlays.add(dialog.closest('[data-test-id="modal"]') || dialog);
+        overlays.add(dialog);
       }
     }
-    for (const overlay of overlays) hide(overlay);
+    for (const overlay of overlays) hide(authLayer(overlay));
 
     for (const element of hidden) {
       if (!element.isConnected) hidden.delete(element);
