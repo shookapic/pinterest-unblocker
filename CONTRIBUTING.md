@@ -7,15 +7,15 @@ Focused bug reports and pull requests are welcome. Keep changes scoped to Pinter
 Requires Node.js 22 or newer.
 
 ```sh
-npm ci
+npm ci --ignore-scripts
 npm run build
 npm test
 npm run lint:firefox
-npx playwright install chromium
+npm run install:browser
 npm run test:browser
 ```
 
-On Linux, use `npx playwright install --with-deps chromium` to install browser dependencies. Browser checks load the unpacked extension into an isolated Chromium profile and route test URLs to local fixtures.
+On Linux, use `npm run install:browser -- --with-deps` to install browser dependencies. The installer invokes the lockfile-installed Playwright CLI directly, without downloading another npm package. Browser checks load the unpacked extension into an isolated Chromium profile and route test URLs to local fixtures.
 
 ## Changes
 

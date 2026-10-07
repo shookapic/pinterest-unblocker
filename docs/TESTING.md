@@ -3,7 +3,7 @@
 ## Automated
 
 ```sh
-npm ci
+npm ci --ignore-scripts
 npm run build
 npm test
 npm run test:browser

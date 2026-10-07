@@ -60,7 +60,7 @@ Read the [privacy policy](PRIVACY.md).
 Requires Node.js 22 or newer.
 
 ```sh
-npm ci
+npm ci --ignore-scripts
 npm run build
 npm test
 ```
