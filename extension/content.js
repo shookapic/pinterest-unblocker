@@ -76,6 +76,9 @@
     for (const element of hidden) {
       if (!element.isConnected) hidden.delete(element);
     }
+    for (const root of restoredRoots.keys()) {
+      if (!root.isConnected) restoredRoots.delete(root);
+    }
     const otherDialog = [...document.querySelectorAll('[role="dialog"], [aria-modal="true"]')]
       .some((dialog) => !dialog.closest('[data-pu-hidden], [hidden], [aria-hidden="true"]') &&
         getComputedStyle(dialog).display !== "none");
@@ -100,11 +103,8 @@
     requestAnimationFrame(clean);
   }
 
-  const observer = new MutationObserver((records) => {
-    // Ignore our own markers so cleanup never feeds an observer loop.
-    if (records.some((record) => record.type === "childList" ||
-      !["data-pu-hidden", "data-pu-scroll"].includes(record.attributeName))) schedule();
-  });
+  // The attribute filter omits our markers to avoid observing our own updates.
+  const observer = new MutationObserver(schedule);
   observer.observe(document, {
     childList: true,
     subtree: true,

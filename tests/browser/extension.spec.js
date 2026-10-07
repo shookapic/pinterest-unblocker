@@ -47,6 +47,7 @@ test("installed extension hides overlays, scrolls, and preserves image right-cli
   expect(await page.evaluate(() => window.siteMenus)).toBe(0);
   await page.locator("#image").click({ button: "right" });
   expect(await page.evaluate(() => window.siteMenus)).toBe(0);
+  await page.keyboard.press("Escape");
   await page.mouse.wheel(0, 700);
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
   await page.close();
